@@ -1,6 +1,16 @@
 # py-inventory-v2-a2a
 py-inventory-v2-a2a
 
+### activate
+```sh
+# env installed 2 folder above
+source ../../.venv/bin/activate
+```
+### install dependecies
+```sh
+pip install -e .
+```
+
 ```
 # skills
 check_inventory()             → deterministic
@@ -34,7 +44,6 @@ Inventory Skills
     └── verify_action
 ```
 
-
 ```
 | Component           | Responsibility                                 |
 | ------------------- | ---------------------------------------------- |
@@ -45,4 +54,14 @@ Inventory Skills
 | **State**           | Remember workflow progress                     |
 | **Action Executor** | Perform side effects                           |
 | **Domain**          | Business rules and models                      |
+```
+
+```
+1. "Which capability/server can satisfy this requirement?"
+                 ↓
+             Registry
+
+2. "Now that I know what capability I need, how do I observe?"
+                 ↓
+             Observer
 ```

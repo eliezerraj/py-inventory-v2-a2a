@@ -1,17 +1,43 @@
 import logging
 
+from src.a2a_server.application.observation.observer import Observer
+
 from opentelemetry import trace
+
+# --------------------------------
+"""
+InventoryOrchestrator
+
+Responsible for:
+
+coordinating the steps
+retrieving state
+calling the decision engine
+executing the selected action
+verifying the result
+"""
+#---------------------------------
+
 #---------------------------------
 # Configure logging and tracer
 #---------------------------------
 tracer = trace.get_tracer(__name__)
 logger = logging.getLogger(__name__)
 
-class InventoryOrchestrator:
+class Orchestrator:
     
     def __init__(self):
-        logger.info("InventoryOrchestrator initialized.")
+        logger.info("Orchestrator initialized SUCCESSFULLY")
         
+        self.observer = Observer()
+
+    async def observe(self, payload):
+        logger.info(f"observe payload.: payload={payload}")
+        
+        response = await self.observer.observe(payload["product"])
+        
+        return response
+            
     def monitor(self, payload):
         logger.info(f"Handling monitor request.: payload={payload}")
         

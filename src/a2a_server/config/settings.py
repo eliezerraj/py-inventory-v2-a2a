@@ -7,6 +7,7 @@ class Settings:
         self.APP_NAME = os.getenv("APP_NAME")
         self.HOST = os.getenv("HOST")
         self.PORT = os.getenv("PORT")
+        self.MCP_SERVER_INVENTORY_URL = os.getenv("MCP_SERVER_INVENTORY_URL")
         
         self.URL_AGENT = os.getenv("URL_AGENT")
         self.SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT"))
