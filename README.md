@@ -12,6 +12,25 @@ pip install -e .
 ```
 
 ```
+OBSERVE : get_product(sku)
+   ↓
+BUILD STATE : get_product_history(sku)
+   ↓
+DECIDE
+   ↓
+VALIDATE DECISION
+   ↓
+ACT
+   ↓
+VERIFY RESULT
+   ↓
+STORE EXPERIENCE
+   ↓
+OBSERVE AGAIN
+```
+
+
+```
 # skills
 check_inventory()             → deterministic
 calculate_stock_coverage()    → deterministic
