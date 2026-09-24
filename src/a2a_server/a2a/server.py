@@ -71,7 +71,15 @@ class A2AServer:
                             }
                     
                     return response
-                
+
+                # Workflow: Inventory Observation
+                elif envelope.message_type == "inventory.monitor.state":
+                    logger.info("Handling inventory.monitor.state message type.")
+                    
+                    response = await self.orchestrator.state(envelope.payload)
+                                        
+                    return response
+                                                
                 # Workflow: Inventory Observation
                 elif envelope.message_type == "inventory.monitor.observer":
                     logger.info("Handling inventory.monitor.observer message type.")
