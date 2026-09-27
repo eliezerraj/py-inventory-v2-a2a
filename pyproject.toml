@@ -13,4 +13,5 @@ dependencies = [
     "gunicorn",
     "numpy",
     "mcp",
+    "google-adk[a2a]",
 ]

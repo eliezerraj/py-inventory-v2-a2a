@@ -12,8 +12,8 @@ AGENT_CARD = {
   "supportedInterfaces": [
     {
       "url": f"{settings.URL_AGENT}/a2a/message",
-      "protocolBinding": "HTTP+JSON",
-      "protocolVersion": settings.VERSION
+      "protocolBinding": "JSONRPC",
+      "protocolVersion": "1.0"
     }
   ],
   "capabilities": {

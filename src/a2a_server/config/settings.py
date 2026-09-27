@@ -9,6 +9,7 @@ class Settings:
         self.PORT = os.getenv("PORT")
         self.MCP_SERVER_INVENTORY_URL = os.getenv("MCP_SERVER_INVENTORY_URL")
         self.MCP_SERVER_ORDER_URL = os.getenv("MCP_SERVER_ORDER_URL")
+        self.A2A_SERVER_STATISTIC_A2A_URL = os.getenv("A2A_SERVER_STATISTIC_A2A_URL")
                 
         self.URL_AGENT = os.getenv("URL_AGENT")
         self.SESSION_TIMEOUT = int(os.getenv("SESSION_TIMEOUT"))
