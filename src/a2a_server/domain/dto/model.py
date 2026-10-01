@@ -11,15 +11,30 @@ class Product(BaseModel):
 class Decision(BaseModel):
     action: str = None
     reason: str= None
+    grid_metadata: dict = None
     
-class InventoryState(BaseModel):
+class Price(BaseModel):
+    currency: str = None
+    amount: float = None
+
+class Inventory(BaseModel):
+    available: int = None
+    sold: int = None
+
+class Statistics(BaseModel):
+    count: int = None
+    mean: float = None
+    std: float = None
+    slope: float = None
+    norm_z: float = None
+
+class ProductState(BaseModel):
     sku: str = None
-    trend: str = None
-    stock: int = None
-    price: float = None
-    minimum_stock: int = None
-    replenishment_threshold: int = None
-    
+    price: Price = None
+    inventory: Inventory = None
+    amount: Statistics = None
+    count: Statistics = None
+
 class AgentGoal(BaseModel):
     goal: str = None
     sku: str = None

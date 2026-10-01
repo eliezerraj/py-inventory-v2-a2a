@@ -1,0 +1,14 @@
+trajectory = [
+    ("t0",  0.50, 0.50, "HOLD"),
+    ("t1",  0.40, 0.60, "HOLD"),
+    ("t2",  0.35, 0.50, "HOLD"),
+    ("t3",  0.25, 0.30, "REPLENISH"),
+    ("t4",  0.19, 0.20, "REPLENISH"),
+    ("t5",  1.00, 0.10, "HOLD"),
+    ("t6",  0.90, 0.20, "DECREASE_PRICE"),
+    ("t7",  0.80, 0.10, "DECREASE_PRICE"),
+    ("t8",  0.80, 0.00, "CLEARANCE"),
+    ("t9",  0.70, 0.50, "CLEARANCE"),
+    ("t10", 0.65, 1.00, "INCREASE_PRICE"),
+    ("t11", 0.50, 0.60, "HOLD"),
+]

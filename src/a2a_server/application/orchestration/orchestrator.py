@@ -2,6 +2,7 @@ import logging
 
 from src.a2a_server.application.observation.observer import Observer
 from src.a2a_server.application.state.builder import Builder
+from src.a2a_server.application.reasoning.decider import Decider
 
 from opentelemetry import trace
 
@@ -32,6 +33,7 @@ class Orchestrator:
         
         self.observer = Observer()
         self.buildstate = Builder()
+        self.decider = Decider()
 
     async def observe(self, payload):
         logger.info(f"observe payload.: payload={payload}")
@@ -46,6 +48,14 @@ class Orchestrator:
         response = await self.buildstate.buildstate(payload["product"])
         
         return response
+
+    async def reasoning(self, payload):
+        logger.info(f"reasoning payload.: payload={payload}")
+        
+        response = await self.decider.reasoning(payload["product_state"])
+        
+        return response
+    
                 
     def monitor(self, payload):
         logger.info(f"Handling monitor request.: payload={payload}")
