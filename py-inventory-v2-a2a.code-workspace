@@ -1,6 +1,11 @@
 {
 	"folders": [
 		{
+			"name": "docker-files",
+			"path": "../docker-files"
+		},
+		{
+			"name": "py-inventory-v2-a2a",
 			"path": "."
 		}
 	],

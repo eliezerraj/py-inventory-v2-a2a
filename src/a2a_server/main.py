@@ -90,7 +90,7 @@ def agent_card():
 
 @app.post("/a2a/message")
 async def a2a_message(a2aRequest: A2ARequest, request: Request) -> A2AResponse:
-    with tracer.start_as_current_span("controller.a2a_message") as span:
+    with tracer.start_as_current_span("main.a2a_message") as span:
         """Handle incoming A2A messages."""
         logger.info("func.a2a_message()")
           

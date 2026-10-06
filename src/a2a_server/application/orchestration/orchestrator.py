@@ -37,32 +37,43 @@ class Orchestrator:
 
     async def observe(self, payload):
         logger.info(f"observe payload.: payload={payload}")
-        
-        response = await self.observer.observe(payload["product"])
-        
-        return response
+        with tracer.start_as_current_span("orchestrator.observe"): 
+            response = await self.observer.observe(payload["product"])
+            return response
 
     async def state(self, payload):
         logger.info(f"state payload.: payload={payload}")
-        
-        response = await self.buildstate.buildstate(payload["product"])
-        
-        return response
+        with tracer.start_as_current_span("orchestrator.state"):
+            response = await self.buildstate.buildstate(payload["product"])
+            return response
 
     async def reasoning(self, payload):
         logger.info(f"reasoning payload.: payload={payload}")
-        
-        response = await self.decider.reasoning(payload["product_state"])
-        
-        return response
-    
-                
-    def monitor(self, payload):
-        logger.info(f"Handling monitor request.: payload={payload}")
-        
-        sku = payload
-        logger.info(f"Monitoring product with SKU: {sku}")
-        
-        response = {"action": "action taken"}
-        
-        return response
+        with tracer.start_as_current_span("orchestrator.reasoning"):
+            
+            response = await self.decider.reasoning(payload["product_state"])
+            
+            return response
+           
+    async def monitor(self, payload):
+        logger.info(f"monitor payload.: payload={payload}")
+        with tracer.start_as_current_span("orchestrator.monitor"):
+            
+            response_observed = await self.observer.observe(payload["product"])
+            
+            response_state = await self.buildstate.buildstate(payload["product"])
+
+            decider_payload = {
+                "observed": response_observed,
+                "state": response_state
+            }
+
+            #response_reasoning = await self.decider.reasoning(decider_payload)
+            
+            response = {
+                "observed": response_observed,
+                "state": response_state,
+                "action": "action taken"
+            }
+
+            return response

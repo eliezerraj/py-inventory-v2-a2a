@@ -100,7 +100,7 @@ class A2AServer:
                 elif envelope.message_type == "inventory.monitor":
                     logger.info("Handling inventory.monitor message type.")
                     
-                    response = await self.orchestrator.monitor(envelope.payload["product"])
+                    response = await self.orchestrator.monitor(envelope.payload)
                     
                     return response
                 

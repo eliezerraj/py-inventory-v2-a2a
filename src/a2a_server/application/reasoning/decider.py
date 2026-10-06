@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from opentelemetry import trace
 
 from src.a2a_server.application.reasoning.gridcell import GridCellModule
 
@@ -9,6 +10,7 @@ from src.a2a_server.domain.dto.model import Decision, ProductState
 # Configure logging and tracer
 #---------------------------------
 logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 class Decider:
 
@@ -80,53 +82,53 @@ class Decider:
 
     async def reasoning(self, product_state: ProductState) -> any:
         logger.info("Deciding action based on product state: %s", product_state)
+        with tracer.start_as_current_span("decider.reasoning"):
+            product_current_state = np.array([0.65, 0.4])
 
-        product_current_state = np.array([0.65, 0.4])
+            continuous_representation, g_representation = self.get_continuous_representation(
+                current_state=product_current_state,
+                anchor_coord=self.ANCHOR_COORD
+            )
 
-        continuous_representation, g_representation = self.get_continuous_representation(
-            current_state=product_current_state,
-            anchor_coord=self.ANCHOR_COORD
-        )
-
-        print("-------------")
-        print("Continuous representation:", continuous_representation)
-        print("Representation:", g_representation)
-        print("-------------")
-        
-        direction, direction_normalized, distance = self.get_direction_to_peak(
-            current_state=product_current_state,
-            peak_coord=self.ANCHOR_COORD
-        )
-
-        print("-------------")
-        print("product_current_state:", product_current_state)
-        print("Direction to peak:", direction)
-        print("Normalized direction:", direction_normalized)
-        print("Distance to peak:", self.ANCHOR_COORD ,distance)
-        print("-------------")
-
-        path = self.generate_path_to_peak(product_current_state, self.ANCHOR_COORD,steps=10)
-
-        paths = []
-        for i, position in enumerate(path):
-            print(f"step={i:02d}",f"position={position}",f"grid={g_representation}" )
             print("-------------")
-            paths.append({
-                "step": i,
-                "position": position.tolist(),
-            })
-      
-        return Decision(
-            action="MONITOR",
-            reason="stock is within normal range",
-            grid_metadata={
-                "current_state": product_current_state.tolist(),
-                "peak_coord": self.ANCHOR_COORD.tolist(),
-                "direction": direction.tolist(),
-                "direction_normalized": direction_normalized.tolist(),
-                "distance": distance,
-                "continuous_representation": continuous_representation,
-                "scale": self.SCALE_CHOICE,
-                "paths": paths
-            }
-        )
+            print("Continuous representation:", continuous_representation)
+            print("Representation:", g_representation)
+            print("-------------")
+            
+            direction, direction_normalized, distance = self.get_direction_to_peak(
+                current_state=product_current_state,
+                peak_coord=self.ANCHOR_COORD
+            )
+
+            print("-------------")
+            print("product_current_state:", product_current_state)
+            print("Direction to peak:", direction)
+            print("Normalized direction:", direction_normalized)
+            print("Distance to peak:", self.ANCHOR_COORD ,distance)
+            print("-------------")
+
+            path = self.generate_path_to_peak(product_current_state, self.ANCHOR_COORD,steps=10)
+
+            paths = []
+            for i, position in enumerate(path):
+                print(f"step={i:02d}",f"position={position}",f"grid={g_representation}" )
+                print("-------------")
+                paths.append({
+                    "step": i,
+                    "position": position.tolist(),
+                })
+        
+            return Decision(
+                action="MONITOR",
+                reason="stock is within normal range",
+                grid_metadata={
+                    "current_state": product_current_state.tolist(),
+                    "peak_coord": self.ANCHOR_COORD.tolist(),
+                    "direction": direction.tolist(),
+                    "direction_normalized": direction_normalized.tolist(),
+                    "distance": distance,
+                    "continuous_representation": continuous_representation,
+                    "scale": self.SCALE_CHOICE,
+                    "paths": paths
+                }
+            )

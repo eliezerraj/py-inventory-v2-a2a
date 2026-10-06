@@ -1,6 +1,8 @@
 import logging
 import uuid
 
+from opentelemetry import trace
+
 from src.a2a_server.config.logger import REQUEST_ID_CTX
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -12,6 +14,10 @@ from src.a2a_server.infrastructure.context.request_context import (
     reset_security_context,
 )
 
+#---------------------------------
+# Configure logging
+#---------------------------------
+tracer = trace.get_tracer(__name__)
 logger = logging.getLogger(__name__)
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
@@ -21,30 +27,31 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         logger.info("Initializing Middleware SUCCESSFULLY")
 
     async def dispatch(self, request: Request, call_next):
-        logger.info(f"Processing request: {request}")
-        
-        request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
-        auth_header = request.headers.get("Authorization")
-        
-        auth_token = None
-        if auth_header and auth_header.startswith("Bearer "):
-            auth_token = auth_header.split(" ", 1)[1]
-        
-        logger.info(f"Setting Request ID {request_id} and auth_token in context: {auth_token}")
-        
-        REQUEST_ID_CTX.set(request_id)
-        
-        sec_context = SecurityContext(
-            x_request_id=request_id,
-            auth_token=auth_token,
-        )
-        
-        set_security_context(sec_context)
-        
-        try:
-            response = await call_next(request)
-            response.headers["x-request-id"] = request_id
+        with tracer.start_as_current_span("middleware.dispatch"):
+            logger.info(f"Processing request: {request}")
             
-            return response
-        finally:
-            reset_security_context(set_security_context(sec_context))
+            request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
+            auth_header = request.headers.get("Authorization")
+            
+            auth_token = None
+            if auth_header and auth_header.startswith("Bearer "):
+                auth_token = auth_header.split(" ", 1)[1]
+            
+            logger.info(f"Setting Request ID {request_id} and auth_token in context: {auth_token}")
+            
+            REQUEST_ID_CTX.set(request_id)
+            
+            sec_context = SecurityContext(
+                x_request_id=request_id,
+                auth_token=auth_token,
+            )
+            
+            token = set_security_context(sec_context)
+            
+            try:
+                response = await call_next(request)
+                response.headers["x-request-id"] = request_id
+                
+                return response
+            finally:
+                reset_security_context(token)
