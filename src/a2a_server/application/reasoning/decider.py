@@ -25,7 +25,7 @@ class Decider:
         # 2. Your Original Inventory Place Cells
         # Where i am and place cells are the sensors
         INVENTORY_PLACE_CELL = {
-            "SURPLUS":  {"coords": np.array([1.0, 0.2])},
+            "FULL":     {"coords": np.array([1.0, 0.2])},
             "HIGH":     {"coords": np.array([0.7, 0.5])},
             "BALANCED": {"coords": np.array([0.4, 0.8])},
             "LOW":      {"coords": np.array([0.2, 0.12]),},
@@ -44,9 +44,9 @@ class Decider:
 
         grid_firing = self.GRID_MODULE.get_grid_activation(X, Y)
 
-        print("----------------")
+        print("-----start grid firing-----------")
         print("grid_firing:" ,grid_firing)
-        print("----------------")
+        print("-----end grid firing-----------")
 
     def get_continuous_representation(self, current_state, anchor_coord):
         representations = {}
@@ -83,7 +83,8 @@ class Decider:
     async def reasoning(self, product_state: ProductState) -> any:
         logger.info("Deciding action based on product state: %s", product_state)
         with tracer.start_as_current_span("decider.reasoning"):
-            product_current_state = np.array([0.65, 0.4])
+            
+            #product_current_state = np.array([0.65, 0.4])
 
             continuous_representation, g_representation = self.get_continuous_representation(
                 current_state=product_current_state,

@@ -26,6 +26,7 @@ class Statistics(BaseModel):
     mean: float = None
     std: float = None
     slope: float = None
+    sum: float = None
     norm_z: float = None
 
 class ProductState(BaseModel):

@@ -7,6 +7,12 @@
 		{
 			"name": "py-inventory-v2-a2a",
 			"path": "."
+		},
+		{
+			"path": "../py-mcp-order-v2"
+		},
+		{
+			"path": "../py-mcp-inventory-v2"
 		}
 	],
 	"settings": {}

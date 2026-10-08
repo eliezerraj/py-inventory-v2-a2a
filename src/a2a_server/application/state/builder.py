@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import json
+import numpy as np
 
 import src.a2a_server.infrastructure.adapter.mcp.mcp_client as mcp_client
 import src.a2a_server.infrastructure.adapter.a2a.a2a_client as a2a_client
@@ -38,23 +39,45 @@ class Builder:
         with tracer.start_as_current_span("builder.buildstate"):
 
             statistics_available = None
-            statistics_price = None
+            statistics_amount = None
             response = None
         
             try:
                 # Fetch order time series data from the MCP server asynchronously
                 resource_uri = f"time_series_order_items://{product['sku']}?limit=10&offset=0" 
                 response_order_time_series = await mcp_client.mcp_resource_fetcher(resource_uri, settings.MCP_SERVER_ORDER_URL)
-
+            
                 order_time_series = json.loads(response_order_time_series)
+                
+                # Check for error status codes
+                status_code = order_time_series.get("status_code")
+                if status_code == 404:
+                    logger.error("Failed to fetch order time series data: %s", order_time_series)
+                    return {
+                        "error": True,
+                        "status_code": status_code,
+                        "message": "Product not found",
+                        "product": product["sku"]
+                    }
+                elif status_code and status_code >= 400:
+                    logger.error(f"Error response from order time series service: status_code={status_code}")
+                    return {
+                        "error": True,
+                        "status_code": status_code,
+                        "message": "Service order time series error",
+                        "product": product["sku"]
+                    }
+                
                 time_series_data = order_time_series.get("time_series_order_items", {}).get("time_series_data", [])
                 
                 # Extract amounts and counts from the time series data            
-                price = order_time_series.get("time_series_order_items", {}).get("product", {}).get("price", {}).get("amount", None)
-                available = order_time_series.get("time_series_order_items", {}).get("product", {}).get("inventory", {}).get("available", None)
+                price = order_time_series.get("time_series_order_items", {}).get("product", {}).get("price", {}).get("amount", 0)
+                lead_time = order_time_series.get("time_series_order_items", {}).get("product", {}).get("lead_time", 0)
+                available = order_time_series.get("time_series_order_items", {}).get("product", {}).get("inventory", {}).get("available", 0)
+                sold = order_time_series.get("time_series_order_items", {}).get("product", {}).get("inventory", {}).get("sold", 0)
                 
                 # Extract amounts and counts from the time series data
-                prices = [item["sum_amount"] for item in time_series_data if item.get("sum_amount") is not None]
+                amount = [item["sum_amount"] for item in time_series_data if item.get("sum_amount") is not None]
                 availables = [item["sum_quantity"] for item in time_series_data if item.get("sum_quantity") is not None]
                 
                 # ---------------------------------------------------
@@ -81,7 +104,7 @@ class Builder:
                     endpoint=settings.A2A_SERVER_STATISTIC_A2A_URL,
                     skill="statistics.compute",
                     payload={
-                        "data": prices
+                        "data": amount
                     }
                 )
                 response_state_amount = await self.a2a_adapter.call(reponse_amount)
@@ -89,14 +112,15 @@ class Builder:
                 if response_state_amount and response_state_amount.HasField("message"):
                     for part in response_state_amount.message.parts:
                         if part.HasField("text"):
-                            statistics_price = json.loads(part.text)
+                            statistics_amount = json.loads(part.text)
                             break
 
                 # Compute normalized z-scores for the current price and available inventory
-                statistics_price["norm_z"] = (price - statistics_price.get("mean")) / (statistics_price.get("std") if statistics_price.get("std") else 1) if statistics_price else None
+                statistics_amount["norm_z"] = (price - statistics_amount.get("mean")) / (statistics_amount.get("std") if statistics_amount.get("std") else 1) if statistics_amount else None
                 statistics_available["norm_z"] = (available - statistics_available.get("mean")) / (statistics_available.get("std") if statistics_available.get("std") else 1) if statistics_available else None
-
-                statistics_price = Statistics(**statistics_price)
+                sum_available = statistics_available.get("sum")
+                
+                statistics_amount = Statistics(**statistics_amount)
                 statistics_available = Statistics(**statistics_available)
                         
             except Exception as e:
@@ -104,16 +128,30 @@ class Builder:
                 response = {"message": str(e)}
                     
             response = {
-                "product": product,
-                "price": {
-                    "current": price,
-                    "statistics": statistics_price,
-                    "data": prices
+                "product": {
+                            "sku": product["sku"],
+                            "lead_time": lead_time,
+                            "price": {"amount": price,
+                            },
+                        },
+                "amount": {
+                    "level": 0,
+                    "statistics": statistics_amount,
                 },
                 "inventory": {
-                    "current": available,
+                    "available": available,
+                    "sold": sold,
+                    "coverage_lead_time": (available / lead_time if lead_time else 1),
+                    "level": np.clip(available / (available + sold) , 0.00, 1.00),
                     "statistics": statistics_available,
-                    "data": availables
+                },
+                "metadata": {
+                    "amount": {
+                        "data": amount,
+                    },
+                    "inventory": {
+                        "data": availables,
+                    },
                 }
             }
             
