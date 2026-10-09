@@ -84,8 +84,12 @@ class Decider:
         logger.info("Deciding action based on product state: %s", product_state)
         with tracer.start_as_current_span("decider.reasoning"):
             
-            #product_current_state = np.array([0.65, 0.4])
-
+            # Handle both dict and ProductState object
+            if isinstance(product_state, dict):
+                product_current_state = np.array([product_state['inventory_level'], product_state['amount_level']])
+            else:
+                product_current_state = np.array([product_state.inventory_level, product_state.amount_level])
+            
             continuous_representation, g_representation = self.get_continuous_representation(
                 current_state=product_current_state,
                 anchor_coord=self.ANCHOR_COORD
@@ -120,8 +124,6 @@ class Decider:
                 })
         
             return Decision(
-                action="MONITOR",
-                reason="stock is within normal range",
                 grid_metadata={
                     "current_state": product_current_state.tolist(),
                     "peak_coord": self.ANCHOR_COORD.tolist(),

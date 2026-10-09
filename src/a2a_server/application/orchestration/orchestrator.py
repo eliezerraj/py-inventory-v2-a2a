@@ -1,6 +1,8 @@
 import logging
 import numpy as np
 
+from src.a2a_server.domain.dto.model import ProductState
+                
 from src.a2a_server.application.action.action import Action
 from src.a2a_server.application.observation.observer import Observer
 from src.a2a_server.application.state.builder import Builder
@@ -74,25 +76,13 @@ class Orchestrator:
                 
                 response_state = await self.buildstate.buildstate(payload["product"])
 
-                decider_payload = {
-                    "product_state": {
-                        "sku": payload["product"]["sku"],
-                        "price": (response_observed.get("product") or {}).get("price"),
-                        "inventory": (response_observed.get("product") or {}).get("inventory"),
-                        "amount":{
-                            "statistics": response_state.get("price", {}).get("statistics")
-                        },
-                        "count":{
-                            "statistics": response_state.get("inventory", {}).get("statistics")
-                        }
-                    }
-                }
-
-                response_reasoning = await self.decider.reasoning(decider_payload)
+                product_state = ProductState()
+                product_state.inventory_level = (response_state.get("inventory") or {}).get("level")
+                product_state.amount_level = (response_state.get("amount") or {}).get("level")
                 
-                if "grid_metadata" not in response_reasoning.grid_metadata:
-                    logger.error("Missing grid_metadata in response_reasoning.grid_metadata")
-                    return {"error": "Missing grid_metadata in response_reasoning.grid_metadata, maybe the product not found"}
+                response_reasoning = await self.decider.reasoning(product_state)
+                
+                print("==============> Response reasoning:", response_reasoning.grid_metadata)
                 
                 if "current_state" not in response_reasoning.grid_metadata:
                     logger.error("Missing current_state in response_reasoning.grid_metadata")

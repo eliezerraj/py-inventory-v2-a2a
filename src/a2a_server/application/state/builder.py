@@ -115,14 +115,17 @@ class Builder:
                             statistics_amount = json.loads(part.text)
                             break
 
-                # Compute normalized z-scores for the current price and available inventory
-                statistics_amount["norm_z"] = (price - statistics_amount.get("mean")) / (statistics_amount.get("std") if statistics_amount.get("std") else 1) if statistics_amount else None
-                statistics_available["norm_z"] = (available - statistics_available.get("mean")) / (statistics_available.get("std") if statistics_available.get("std") else 1) if statistics_available else None
-                sum_available = statistics_available.get("sum")
+                # data used to calc inventory amount velocity
+                last_amount = amount[-1] if amount else 0
+                z =  (last_amount - statistics_amount.get("mean")) / statistics_amount.get("std")
                 
+                # Sigmoid function to normalize the inventory amount velocity
+                level_amount = 1.0 / (1.0 + np.exp(-z))
+                
+                # Convert the statistics dictionaries to Statistics objects
                 statistics_amount = Statistics(**statistics_amount)
                 statistics_available = Statistics(**statistics_available)
-                        
+                                
             except Exception as e:
                 logger.error(f"Error fetching order service asynchronously: {e}")
                 response = {"message": str(e)}
@@ -135,14 +138,14 @@ class Builder:
                             },
                         },
                 "amount": {
-                    "level": 0,
+                    "level": level_amount,
                     "statistics": statistics_amount,
                 },
                 "inventory": {
+                    "level": np.clip(available / (available + sold) , 0.00, 1.00),
                     "available": available,
                     "sold": sold,
                     "coverage_lead_time": (available / lead_time if lead_time else 1),
-                    "level": np.clip(available / (available + sold) , 0.00, 1.00),
                     "statistics": statistics_available,
                 },
                 "metadata": {
