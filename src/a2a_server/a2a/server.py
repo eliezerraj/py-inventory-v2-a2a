@@ -29,6 +29,7 @@ class A2AServer:
     def __init__(self, settings, orchestrator):
         self.settings = settings
         self.orchestrator = orchestrator
+        
         logger.info("A2AServer initialized SUCCESSFULLY")
     
     async def router(self, envelope):

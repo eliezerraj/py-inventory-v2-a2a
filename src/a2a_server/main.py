@@ -19,7 +19,6 @@ from src.a2a_server.infrastructure.telemetry.metric import (
     IN_FLIGHT_REQUESTS
 )
 
-
 from src.a2a_server.a2a.message_model import A2ARequest, A2AEnvelope, A2AResponse
 from src.a2a_server.a2a.server import A2AServer
 from src.a2a_server.application.orchestration.orchestrator import Orchestrator
@@ -83,6 +82,13 @@ a2AServer = A2AServer(settings, orchestrator)
 # ---------------------------------
 # API Endpoints
 # ---------------------------------
+@app.get("/metrics")
+def metrics():
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST
+    )
+
 @app.get("/v1/info")
 def get_info():
     with tracer.start_as_current_span("controller.get_info"):

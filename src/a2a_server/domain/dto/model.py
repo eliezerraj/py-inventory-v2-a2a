@@ -1,6 +1,17 @@
 from typing import Optional
 from pydantic import BaseModel
 
+class Trajectory(BaseModel):
+    timestamp: str = None
+    inventory: float = None
+    demand: float = None
+    action: str = None
+    
+class PlaceCell(BaseModel):
+    state: str = None
+    inventory: float = None
+    amount: float = None
+
 class Statistics(BaseModel):
     count: int = None
     mean: float = None

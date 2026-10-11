@@ -5,6 +5,8 @@ import numpy as np
 from pathlib import Path
 from opentelemetry import trace
 
+from src.a2a_server.infrastructure.repository.inventory_repository import InventoryRepository
+
 #---------------------------------
 # Configure logging and tracer
 #---------------------------------
@@ -14,22 +16,10 @@ tracer = trace.get_tracer(__name__)
 class Action:
     
     def __init__(self):  
-        base_path = Path(__file__).parent.parent.parent.parent
-        memory_path = base_path / "a2a_server/application/action/memory/memory.json"
-        with open(memory_path, "r") as f:
-            self.memory = json.load(f)
-            
-        self.trajectory = [
-                        (
-                        item["timestamp"],
-                        item["inventory"],
-                        item["demand"],
-                        item["action"]
-                        )
-                        for item in self.memory["trajectory"]
-        ]
+        inventory_repository = InventoryRepository()
+        self.trajectory = inventory_repository.get_trajectory()
         self.transitions = self.build_transitions(self.trajectory)
-        
+                
         print("---------- start load transitions (Memory)----------------")
         print(self.transitions)
         print("----------end load transitions (Memory)----------------")
@@ -133,10 +123,7 @@ class Action:
     def take_action(self, current_state):
         logger.info(f"Taking action with current state: {current_state}")
 
-        print("===============1 ------------------")
         transition, distance = self.predict_next_state(current_state)
-        print("===============2 ------------------")
-        
         return {
             "transition": transition["action"],
             "next_state": transition["next_state"].tolist(),  # Convert numpy array to list

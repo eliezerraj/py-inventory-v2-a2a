@@ -44,7 +44,7 @@ class Builder:
         
             try:
                 # Fetch order time series data from the MCP server asynchronously
-                resource_uri = f"time_series_order_items://{product['sku']}?limit=10&offset=0" 
+                resource_uri = f"time_series_order_items://{product['sku']}?limit={settings.LIMIT}&offset=0" 
                 response_order_time_series = await mcp_client.mcp_resource_fetcher(resource_uri, settings.MCP_SERVER_ORDER_URL)
             
                 order_time_series = json.loads(response_order_time_series)
@@ -77,6 +77,16 @@ class Builder:
                 sold = order_time_series.get("time_series_order_items", {}).get("product", {}).get("inventory", {}).get("sold", 0)
                 
                 # Extract amounts and counts from the time series data
+                
+                if not time_series_data:
+                    logger.warning("No time series data available for product: %s", product["sku"])
+                    return {
+                        "error": True,
+                        "status_code": 404,
+                        "message": "No time series data available",
+                        "product": product["sku"]
+                    }
+                
                 amount = [item["sum_amount"] for item in time_series_data if item.get("sum_amount") is not None]
                 availables = [item["sum_quantity"] for item in time_series_data if item.get("sum_quantity") is not None]
                 
